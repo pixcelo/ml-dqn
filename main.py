@@ -20,21 +20,25 @@ def main():
 
     # Main loop
     while True:
-        # Get market data
-        market_data = trade.get_market_data()
+        try:
+            # Get market data
+            market_data = trade.get_market_data()
+            logger().info("get market data")
 
-        # Make predictions
-        prediction = predictor.predict(market_data)
-        print(prediction)
+            # Make predictions
+            prediction = predictor.predict(market_data)
+            print(prediction)
 
-        time.sleep(2)
+            time.sleep(2)
 
-        # Execute trade
-        # trade_result = trade.execute_trade(prediction)
+            # Execute trade
+            # trade_result = trade.execute_trade(prediction)
 
-        # Log and notify
-        # logger.log(trade_result, prediction)
-        # discord_notifier.notify(trade_result, prediction)
+            # Log and notify
+            # logger.log(trade_result, prediction)
+            # discord_notifier.notify(trade_result, prediction)
+        except Exception as e:
+            logger().error(f"An exception occurred: {e}")
 
 if __name__ == "__main__":
     main()
