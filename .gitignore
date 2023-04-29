@@ -177,6 +177,9 @@ pyrightconfig.json
 # config
 config.ini
 
+# log files
+log/
+
 .DS_Store
 
 # End of https://www.toptal.com/developers/gitignore/api/python
