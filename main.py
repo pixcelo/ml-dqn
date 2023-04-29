@@ -13,8 +13,10 @@ def main():
     # Initialize components
     trade = Trade(config)
     predictor = Predictor(config)
-    logger = Logger()
+    logger = Logger("main")
     discord_notifier = DiscordNotifier(config)
+
+    logger().info("Main function started")
 
     # Main loop
     while True:
