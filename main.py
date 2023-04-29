@@ -3,6 +3,7 @@ from trade import Trade
 from predict import Predictor
 from logger import Logger
 from discord_notifier import DiscordNotifier
+import time
 
 def main():
     # Read configuration
@@ -22,13 +23,16 @@ def main():
 
         # Make predictions
         prediction = predictor.predict(market_data)
+        print(prediction)
+
+        time.sleep(2)
 
         # Execute trade
-        trade_result = trade.execute_trade(prediction)
+        # trade_result = trade.execute_trade(prediction)
 
         # Log and notify
-        logger.log(trade_result, prediction)
-        discord_notifier.notify(trade_result, prediction)
+        # logger.log(trade_result, prediction)
+        # discord_notifier.notify(trade_result, prediction)
 
 if __name__ == "__main__":
     main()

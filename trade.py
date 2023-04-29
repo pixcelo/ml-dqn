@@ -18,7 +18,6 @@ class Trade:
         df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
         df[f"{timeframe}_timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
         df.set_index(f"{timeframe}_timestamp", inplace=True)
-        df.drop("timestamp", axis=1, inplace=True)
         df.columns = [f"{timeframe}_{col}" for col in df.columns]
         return df
 
@@ -27,11 +26,8 @@ class Trade:
 
         # Get OHLCV data for each timeframe
         ohlcv_data = [self.get_ohlcv(timeframe) for timeframe in timeframes]
-
-        # Merge dataframes
-        merged_data = pd.concat(ohlcv_data, axis=1, join="inner")
-
-        return merged_data
+        
+        return ohlcv_data
 
     def execute_trade(self, prediction):
         # Execute trade based on prediction here
