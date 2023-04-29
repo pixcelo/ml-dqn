@@ -1,4 +1,5 @@
 import os
+import sys
 from loguru import logger
 
 class Logger:
@@ -9,6 +10,13 @@ class Logger:
             level="INFO",
             format="{time} - {name} : [{level}] {message}",
             rotation="10 MB"
+        )
+
+        # Add console handler to output logs to terminal
+        logger.add(
+            sys.stdout,
+            level=log_level,
+            format="<green>{time}</green> - {name} : <yellow>[{level}]</yellow> {message}"
         )
 
         # Create log folder if it doesn't exist
