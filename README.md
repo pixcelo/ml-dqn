@@ -6,6 +6,19 @@
 
 また、取引結果をログに出力し、Discordの指定チャンネルに通知します。
 
+## ディレクトリ構成
+```
+.
+├── config.ini
+├── discord_notifier.py
+├── logger.py
+├── main.py
+├── model
+│   └── model.pkl
+├── predict.py
+└── trade.py
+```
+
 ## アーキテクチャ
 
 1. エントリポイント: main.py
@@ -35,16 +48,16 @@
 [exchange]
 api_key = your_api_key
 secret_key = your_secret_key
-exchange_name = binance
+exchange_name = bybit
 
 [discord]
 webhook_url = your_discord_webhook_url
 
 [model]
-model_path = data/model.pkl
+model_path = model/model.pkl
 ```
 
-2. 学習済みの機械学習モデルを、`data`フォルダに格納してください。
+2. 学習済みの機械学習モデルを、`model`フォルダに格納してください。
 
 3. 必要なライブラリをインストールしてください。
 
