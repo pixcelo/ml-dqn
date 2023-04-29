@@ -68,13 +68,17 @@ pip install ccxt requests
 4. main.pyを実行して、プログラムを開始します。
 
 
-## 注意事項
 
-- このプログラムは例示的なものであり、実際の取引に使用する前に必要な機能を追加し、適切にテストすることをお勧めします。
-- 取引の結果に対する責任は、プログラムを使用するユーザーにあります。このプログラムを使用して発生した損害に対して、開発者は責任を負いません。
+## 開発メモ
+loguruを使用したlogger.pyは以下のように使用する
 
-## ライセンス
+```
+from logger import Logger
 
-このプロジェクトは、MITライセンスのもとで公開されています。詳細については、[LICENSE](LICENSE)ファイルを参照してください。
+def main():
+    logger = Logger("main")
+    logger().info("Main function started")
 
-
+if __name__ == "__main__":
+    main()
+```
