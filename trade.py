@@ -1,4 +1,5 @@
 import ccxt
+import pandas as pd
 
 class Trade:
     def __init__(self, config):
@@ -12,9 +13,25 @@ class Trade:
             "secret": self.secret_key
         })
 
+    def get_ohlcv(self, timeframe):
+        ohlcv = self.exchange.fetch_ohlcv("BTC/USDT", timeframe)
+        df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
+        df[f"{timeframe}_timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+        df.set_index(f"{timeframe}_timestamp", inplace=True)
+        df.drop("timestamp", axis=1, inplace=True)
+        df.columns = [f"{timeframe}_{col}" for col in df.columns]
+        return df
+
     def get_market_data(self):
-        # Get market data here
-        pass
+        timeframes = ["1m", "5m", "15m", "1h", "4h"]
+
+        # Get OHLCV data for each timeframe
+        ohlcv_data = [self.get_ohlcv(timeframe) for timeframe in timeframes]
+
+        # Merge dataframes
+        merged_data = pd.concat(ohlcv_data, axis=1, join="inner")
+
+        return merged_data
 
     def execute_trade(self, prediction):
         # Execute trade based on prediction here
