@@ -82,3 +82,42 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+
+## Bybit Ticker Information
+
+2023.4.30
+```
+https://api.bybit.com/v2/public/symbols?symbol=BTCUSDT
+```
+
+レスポンスの中に、lot_size_filterという項目があります。これが最小単位を表します
+
+```
+{
+   "name":"BTCUSDT",
+   "alias":"BTCUSDT",
+   "status":"Trading",
+   "base_currency":"BTC",
+   "quote_currency":"USDT",
+   "price_scale":2,
+   "taker_fee":"0.0006",
+   "maker_fee":"0.0001",
+   "funding_interval":480,
+   "leverage_filter": {
+      "min_leverage":1,
+      "max_leverage":100,
+      "leverage_step":"0.01"
+   },
+   "price_filter": {
+      "min_price":"0.10",
+      "max_price":"199999.80",
+      "tick_size":"0.10"
+   },
+   "lot_size_filter":{
+      "max_trading_qty":100,
+      "min_trading_qty":0.001,
+      "qty_step":0.001,
+      "post_only_max_trading_qty":"1000.000"
+   }
+},
+```
