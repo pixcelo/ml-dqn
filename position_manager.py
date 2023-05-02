@@ -3,7 +3,7 @@ class PositionManager:
         self.exchange = exchange
         self.symbol = symbol
         self.position = []
-        self.update_position()
+        self.update_positions()
 
     def update_positions(self):
         try:
