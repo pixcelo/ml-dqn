@@ -2,17 +2,17 @@ class PositionManager:
     def __init__(self, exchange, symbol):
         self.exchange = exchange
         self.symbol = symbol
-        self.position = None
+        self.position = []
         self.update_position()
 
-    def update_position(self):
+    def update_positions(self):
         try:
             response = self.exchange.fetchPositions()
             positions = response
+            self.positions = []  # init self.positions
             for position in positions:
                 if position['symbol'] == self.exchange.market_id(self.symbol):
-                    self.position = position
-                    break
+                    self.positions.append(position)
         except Exception as e:
             print(f"An error occurred while fetching positions: {e}")
 
@@ -32,11 +32,11 @@ class PositionManager:
             return float(self.position['unrealised_pnl'])
         return None
     
-    def separate_positions_by_side(positions):
+    def separate_positions_by_side(self):
         long_positions = []
         short_positions = []
 
-        for position in positions:
+        for position in self.positions:
             if position['info']['side'] == 'Buy':
                 long_positions.append(position)
             elif position['info']['side'] == 'Sell':
