@@ -38,33 +38,60 @@ class Trade:
 
     def get_market_data(self):
         timeframes = ["1m", "5m", "15m", "1h", "4h"]
-
         # Get OHLCV data for each timeframe
         ohlcv_data = [self.get_ohlcv(timeframe) for timeframe in timeframes]
-        
         return ohlcv_data
 
     def execute_trade(self, prediction):
         self.get_balance()
         # Execute trade based on prediction here
         position_manager = PositionManager(self.exchange, symbol)
-        position_size = position_manager.get_position_size()
+        long_positions, short_positions = position_manager.separate_positions_by_side()
 
         symbol = "BTC/USDT"
-        amount = 0.001
+        amount = 0.001        
+        result = None
 
-        if position_size == 0:
+        trade_action = self.decide_trade_action(long_positions, short_positions, prediction)
+        print(trade_action)
+
+        if trade_action == "BUY_TO_OPEN":
+            result = self.place_order(symbol, "Buy", amount)
+        elif trade_action == "SELL_TO_OPEN":
+            result = self.place_order(symbol, "Sell", amount)
+        elif trade_action == "SELL_TO_CLOSE":
+            result = self.place_order(symbol, "Sell", amount)
+        elif trade_action == "BUY_TO_CLOSE":
+            result = self.place_order(symbol, "Buy", amount)
+        elif trade_action == "HOLD_LONG" or trade_action == "HOLD_SHORT" or trade_action == "DO_NOTHING":
+            pass
+
+        return result
+    
+    def decide_trade_action(self, long_positions, short_positions, prediction):
+        if long_positions:
             if prediction == 1:
-                retult = self.place_order(symbol, "Buy", amount)
+                return "HOLD_LONG"
             else:
-                retult = self.place_order(symbol, "Sell", amount)
+                return "SELL_TO_CLOSE"
         else:
             if prediction == 1:
-                pass
+                return "BUY_TO_OPEN"
             else:
                 pass
 
-        return retult
+        if short_positions:
+            if prediction != 1:
+                return "HOLD_SHORT"
+            else:
+                return "BUY_TO_CLOSE"
+        else:
+            if prediction != 1:
+                return "SELL_TO_OPEN"
+            else:
+                pass
+
+        return "DO_NOTHING"
     
     def place_order(self, symbol, side, amount):
         try:
@@ -82,7 +109,6 @@ class Trade:
                 "orderLinkId": orderLinkId
             }
             self.http_request(endpoint, method, params, "Create")
-
             return True
         
         except Exception as e:
@@ -91,7 +117,6 @@ class Trade:
 
     def get_best_bid_ask_price(self, symbol, side):
         order_book = self.exchange.fetch_order_book(symbol)
-
         if side == 'buy':
             return order_book['bids'][0][0]
         else:
