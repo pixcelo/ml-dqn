@@ -93,27 +93,41 @@ class Trade:
 
         return "DO_NOTHING"
     
-    def place_order(self, symbol, side, amount):
+    def http_request(self, endpoint, method, params, info):
         try:
-            #Create Order
-            endpoint="/contract/v3/private/order/create"
-            method="POST"
-            orderLinkId=uuid.uuid4().hex
-            params = {
-                "symbol": symbol,
-                "side": side,
-                "positionIdx": 1,
-                "orderType": "Market",
-                "qty": amount,
-                "timeInForce": "GoodTillCancel",
-                "orderLinkId": orderLinkId
+            httpClient = requests.Session()
+            global time_stamp
+            time_stamp = str(int(time.time() * 10 ** 3))
+            payload = json.dumps(params)
+            signature = self.genSignature(payload)
+            headers = {
+                'X-BAPI-API-KEY': self.api_key,
+                'X-BAPI-SIGN': signature,
+                'X-BAPI-SIGN-TYPE': '2',
+                'X-BAPI-TIMESTAMP': time_stamp,
+                'X-BAPI-RECV-WINDOW': self.recv_window,
+                'Content-Type': 'application/json'
             }
-            self.http_request(endpoint, method, params, "Create")
-            return True
-        
+            if method == "POST":
+                response = httpClient.request(method, self.url + endpoint, headers=headers, data=payload)
+            else:
+                payload = urlencode(params)
+                response = httpClient.request(method, self.url + endpoint + '?' + payload, headers=headers)
+
+            response_data = response.json()
+
+            if response.status_code == 200:
+                summary = f"{info} succeeded. Elapsed Time: {response.elapsed}, Result: {response_data}"
+            else:
+                summary = f"{info} failed. Elapsed Time: {response.elapsed}, Error: {response_data}"
+
+            print(summary)
+            return summary
+
         except Exception as e:
             self.logger().error(f"An exception occurred: {e}")
-            return False
+            return f"{info} failed. An exception occurred: {e}"
+
 
     def get_best_bid_ask_price(self, symbol, side):
         order_book = self.exchange.fetch_order_book(symbol)
