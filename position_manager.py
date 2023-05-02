@@ -31,3 +31,15 @@ class PositionManager:
         if self.position is not None:
             return float(self.position['unrealised_pnl'])
         return None
+    
+    def separate_positions_by_side(positions):
+        long_positions = []
+        short_positions = []
+
+        for position in positions:
+            if position['info']['side'] == 'Buy':
+                long_positions.append(position)
+            elif position['info']['side'] == 'Sell':
+                short_positions.append(position)
+
+        return long_positions, short_positions
