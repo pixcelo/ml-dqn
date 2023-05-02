@@ -5,6 +5,8 @@ import time
 import hmac
 import uuid
 import hashlib
+import json
+from urllib.parse import urlencode
 from position_manager import PositionManager
 from logger import Logger
 
@@ -53,9 +55,9 @@ class Trade:
 
         if position_size == 0:
             if prediction == 1:
-                retult = self.place_order(symbol, "buy", amount)
+                retult = self.place_order(symbol, "Buy", amount)
             else:
-                retult = self.place_order(symbol, "sell", amount)
+                retult = self.place_order(symbol, "Sell", amount)
         else:
             if prediction == 1:
                 pass
@@ -70,7 +72,15 @@ class Trade:
             endpoint="/contract/v3/private/order/create"
             method="POST"
             orderLinkId=uuid.uuid4().hex
-            params='{"symbol": "BTCUSDT","side": "Buy","positionIdx": 1,"orderType": "Market","qty": "0.001","timeInForce": "GoodTillCancel","orderLinkId": "' + orderLinkId + '"}'
+            params = {
+                "symbol": symbol,
+                "side": side,
+                "positionIdx": 1,
+                "orderType": "Market",
+                "qty": amount,
+                "timeInForce": "GoodTillCancel",
+                "orderLinkId": orderLinkId
+            }
             self.http_request(endpoint, method, params, "Create")
 
             return True
@@ -92,32 +102,33 @@ class Trade:
         usdt_balance = balance['total']['USDT']
         print(f'USDT balance: {usdt_balance}')
 
-    def generate_signature(self, secret, params):
-        sorted_params = sorted(params.items())
-        query_string = '&'.join([f'{k}={v}' for k, v in sorted_params])
-        return hmac.new(bytes(secret, 'utf-8'), bytes(query_string, 'utf-8'), hashlib.sha256).hexdigest()
-
-    def http_request(self, endPoint, method, payload, Info):
-        httpClient=requests.Session()
-        global time_stamp
-        time_stamp=str(int(time.time() * 10 ** 3))
-        signature=self.genSignature(payload)
-        headers = {
-            'X-BAPI-API-KEY': self.api_key,
-            'X-BAPI-SIGN': signature,
-            'X-BAPI-SIGN-TYPE': '2',
-            'X-BAPI-TIMESTAMP': time_stamp,
-            'X-BAPI-RECV-WINDOW': self.recv_window,
-            'Content-Type': 'application/json'
-        }
-        if(method=="POST"):
-            response = httpClient.request(method, self.url+endPoint, headers=headers, data=payload)
-        else:
-            response = httpClient.request(method, self.url+endPoint+"?"+payload, headers=headers)
-        print(response.text)
-        print(Info + " Elapsed Time : " + str(response.elapsed))
-
-        return response.elapsed['result']
+    def http_request(self, endpoint, method, params, info):
+        try:
+            httpClient = requests.Session()
+            global time_stamp
+            time_stamp = str(int(time.time() * 10 ** 3))
+            payload = json.dumps(params)
+            signature = self.genSignature(payload)
+            headers = {
+                'X-BAPI-API-KEY': self.api_key,
+                'X-BAPI-SIGN': signature,
+                'X-BAPI-SIGN-TYPE': '2',
+                'X-BAPI-TIMESTAMP': time_stamp,
+                'X-BAPI-RECV-WINDOW': self.recv_window,
+                'Content-Type': 'application/json'
+            }
+            if method == "POST":
+                response = httpClient.request(method, self.url + endpoint, headers=headers, data=payload)
+            else:
+                payload = urlencode(params)
+                response = httpClient.request(method, self.url + endpoint + '?' + payload, headers=headers)
+            print(response.text)
+            print(info + " Elapsed Time : " + str(response.elapsed))
+            return True
+        
+        except Exception as e:
+            self.logger().error(f"An exception occurred: {e}")
+            return False
 
     def genSignature(self, payload):
         param_str= str(time_stamp) + self.api_key + self.recv_window + payload
