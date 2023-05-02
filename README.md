@@ -85,6 +85,9 @@ if __name__ == "__main__":
 
 ## Bybit Ticker Information
 
+GitHub
+https://github.com/ccxt/ccxt/blob/master/python/ccxt/bybit.py
+
 2023.4.30
 ```
 https://api.bybit.com/v2/public/symbols?symbol=BTCUSDT

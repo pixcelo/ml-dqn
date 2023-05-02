@@ -29,14 +29,12 @@ def main():
             prediction = predictor.predict(market_data)
             print(prediction)
 
-            time.sleep(2)
-
             # Execute trade
-            # trade_result = trade.execute_trade(prediction)
+            trade_result = trade.execute_trade(prediction)
+            discord_notifier.notify(trade_result)
+            
+            time.sleep(1)
 
-            # Log and notify
-            # logger.log(trade_result, prediction)
-            # discord_notifier.notify(trade_result, prediction)
         except Exception as e:
             logger().error(f"An exception occurred: {e}")
 
