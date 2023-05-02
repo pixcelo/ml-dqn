@@ -44,11 +44,11 @@ class Trade:
 
     def execute_trade(self, prediction):
         self.get_balance()
+        symbol = "BTC/USDT"
         # Execute trade based on prediction here
         position_manager = PositionManager(self.exchange, symbol)
         long_positions, short_positions = position_manager.separate_positions_by_side()
 
-        symbol = "BTC/USDT"
         amount = 0.001        
         result = None
 
@@ -67,6 +67,22 @@ class Trade:
             pass
 
         return result
+    
+    def place_order(self, symbol, side, amount):
+        endpoint="/contract/v3/private/order/create"
+        method="POST"
+        orderLinkId=uuid.uuid4().hex
+        params = {
+            "symbol": symbol,
+            "side": side,
+            "positionIdx": 1,
+            "orderType": "Market",
+            "qty": amount,
+            "timeInForce": "GoodTillCancel",
+            "orderLinkId": orderLinkId
+        }
+        self.http_request(endpoint, method, params, "Create")
+        return True
     
     def decide_trade_action(self, long_positions, short_positions, prediction):
         if long_positions:
