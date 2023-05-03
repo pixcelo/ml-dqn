@@ -24,7 +24,7 @@ class Trade:
         })
 
         self.logger = Logger("main")
-        self.recv_window=str(5000)
+        self.recv_window=str(10000)
         self.url="https://api.bybit.com"
         # self.url="https://api-testnet.bybit.com" 
 
@@ -44,9 +44,8 @@ class Trade:
 
     def execute_trade(self, prediction):
         self.get_balance()
-        symbol = "BTC/USDT"
         # Execute trade based on prediction here
-        position_manager = PositionManager(self.exchange, symbol)
+        position_manager = PositionManager(self.exchange, "BTCUSDT")
         long_positions, short_positions = position_manager.separate_positions_by_side()
 
         amount = 0.001        
@@ -56,33 +55,17 @@ class Trade:
         print(trade_action)
 
         if trade_action == "BUY_TO_OPEN":
-            result = self.place_order(symbol, "Buy", amount)
+            result = self.place_order("BTCUSDT", "Buy", amount)
         elif trade_action == "SELL_TO_OPEN":
-            result = self.place_order(symbol, "Sell", amount)
+            result = self.place_order("BTCUSDT", "Sell", amount)
         elif trade_action == "SELL_TO_CLOSE":
-            result = self.place_order(symbol, "Sell", amount)
+            result = self.place_order("BTCUSDT", "Sell", amount)
         elif trade_action == "BUY_TO_CLOSE":
-            result = self.place_order(symbol, "Buy", amount)
+            result = self.place_order("BTCUSDT", "Buy", amount)
         elif trade_action == "HOLD_LONG" or trade_action == "HOLD_SHORT" or trade_action == "DO_NOTHING":
             pass
 
         return result
-    
-    def place_order(self, symbol, side, amount):
-        endpoint="/contract/v3/private/order/create"
-        method="POST"
-        orderLinkId=uuid.uuid4().hex
-        params = {
-            "symbol": symbol,
-            "side": side,
-            "positionIdx": 1,
-            "orderType": "Market",
-            "qty": amount,
-            "timeInForce": "GoodTillCancel",
-            "orderLinkId": orderLinkId
-        }
-        self.http_request(endpoint, method, params, "Create")
-        return True
     
     def decide_trade_action(self, long_positions, short_positions, prediction):
         if long_positions:
@@ -108,6 +91,23 @@ class Trade:
                 pass
 
         return "DO_NOTHING"
+    
+    def place_order(self, symbol, side, amount):
+        endpoint="/contract/v3/private/order/create"
+        method="POST"
+        orderLinkId=uuid.uuid4().hex
+        params = {
+            "symbol": symbol,
+            "side": side,
+            "positionIdx": 1,
+            "orderType": "Market",
+            "qty": str(amount),
+            "timeInForce": "GoodTillCancel",
+            "orderLinkId": orderLinkId
+        }
+        self.http_request(endpoint, method, params, "Create")
+        return True
+    
     
     def http_request(self, endpoint, method, params, info):
         try:
@@ -157,33 +157,33 @@ class Trade:
         usdt_balance = balance['total']['USDT']
         print(f'USDT balance: {usdt_balance}')
 
-    def http_request(self, endpoint, method, params, info):
-        try:
-            httpClient = requests.Session()
-            global time_stamp
-            time_stamp = str(int(time.time() * 10 ** 3))
-            payload = json.dumps(params)
-            signature = self.genSignature(payload)
-            headers = {
-                'X-BAPI-API-KEY': self.api_key,
-                'X-BAPI-SIGN': signature,
-                'X-BAPI-SIGN-TYPE': '2',
-                'X-BAPI-TIMESTAMP': time_stamp,
-                'X-BAPI-RECV-WINDOW': self.recv_window,
-                'Content-Type': 'application/json'
-            }
-            if method == "POST":
-                response = httpClient.request(method, self.url + endpoint, headers=headers, data=payload)
-            else:
-                payload = urlencode(params)
-                response = httpClient.request(method, self.url + endpoint + '?' + payload, headers=headers)
-            print(response.text)
-            print(info + " Elapsed Time : " + str(response.elapsed))
-            return True
+    # def http_request(self, endpoint, method, params, info):
+    #     try:
+    #         httpClient = requests.Session()
+    #         global time_stamp
+    #         time_stamp = str(int(time.time() * 10 ** 3))
+    #         payload = json.dumps(params)
+    #         signature = self.genSignature(payload)
+    #         headers = {
+    #             'X-BAPI-API-KEY': self.api_key,
+    #             'X-BAPI-SIGN': signature,
+    #             'X-BAPI-SIGN-TYPE': '2',
+    #             'X-BAPI-TIMESTAMP': time_stamp,
+    #             'X-BAPI-RECV-WINDOW': self.recv_window,
+    #             'Content-Type': 'application/json'
+    #         }
+    #         if method == "POST":
+    #             response = httpClient.request(method, self.url + endpoint, headers=headers, data=payload)
+    #         else:
+    #             payload = urlencode(params)
+    #             response = httpClient.request(method, self.url + endpoint + '?' + payload, headers=headers)
+    #         print(response.text)
+    #         print(info + " Elapsed Time : " + str(response.elapsed))
+    #         return True
         
-        except Exception as e:
-            self.logger().error(f"An exception occurred: {e}")
-            return False
+    #     except Exception as e:
+    #         self.logger().error(f"An exception occurred: {e}")
+    #         return False
 
     def genSignature(self, payload):
         param_str= str(time_stamp) + self.api_key + self.recv_window + payload
