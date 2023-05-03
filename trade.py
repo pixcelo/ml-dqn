@@ -47,7 +47,7 @@ class Trade:
         return ohlcv_data
 
     def execute_trade(self, prediction):
-        self.get_balance()
+        self.check_balance()
         # Execute trade based on prediction here
         position_manager = PositionManager(self.exchange, "BTCUSDT")
         long_positions, short_positions = position_manager.separate_positions_by_side()
