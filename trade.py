@@ -101,21 +101,22 @@ class Trade:
                 pass
 
         return "DO_NOTHING"
-    
+
     def place_order(self, symbol, side, amount):
-        endpoint="/contract/v3/private/order/create"
+        endpoint="/v5/order/create"
         method="POST"
         orderLinkId=uuid.uuid4().hex
         params = {
+            "category": "linear",
             "symbol": symbol,
+            "isLeverage": 1,
             "side": side,
             "orderType": "Market",
             "qty": str(amount),
-            "timeInForce": "GoodTillCancel",
             "orderLinkId": orderLinkId,
             "positionIdx": 0 # one-way mode
         }
-        return self.http_request(endpoint, method, params, "Create")    
+        return self.http_request(endpoint, method, params, "Order")   
     
     def http_request(self, endpoint, method, params, info):
         try:
