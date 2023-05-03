@@ -8,6 +8,7 @@ import hashlib
 import json
 from urllib.parse import urlencode
 from position_manager import PositionManager
+from account import Account
 from logger import Logger
 
 class Trade:
@@ -21,9 +22,11 @@ class Trade:
             "apiKey": self.api_key,
             "secret": self.secret_key,
             "enableRateLimit": True,
+            'options': {'defaultType': 'linear'}
         })
 
         self.logger = Logger("trade")
+        self.account = Account(self.exchange)
         self.recv_window=str(10000)
         self.url="https://api.bybit.com"
         # self.url="https://api-testnet.bybit.com" 
@@ -181,10 +184,8 @@ class Trade:
         response = self.http_request(endpoint, method, params, "Set Position Mode")
         return response
         
-    def get_balance(self):
-        balance = self.exchange.fetch_balance()
-        usdt_balance = balance['total']['USDT']
-        print(f'USDT balance: {usdt_balance}')
+    def check_balance(self):
+        self.account.get_balance()
 
     def genSignature(self, payload):
         param_str= str(time_stamp) + self.api_key + self.recv_window + payload
