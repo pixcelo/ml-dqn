@@ -20,8 +20,6 @@ class Predictor:
             processed_dfs.append(processed_df)
 
         combined_df = pd.concat(processed_dfs, axis=1).dropna()
-        print(combined_df)
-
         return combined_df
     
     def predict(self, market_data):
