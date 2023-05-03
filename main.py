@@ -27,7 +27,7 @@ def main():
 
             # Make predictions
             prediction = predictor.predict(market_data)
-            print(prediction)
+            print(f"The predicted value is {prediction}.")
 
             # Execute trade
             trade_result = trade.execute_trade(prediction)
