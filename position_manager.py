@@ -7,11 +7,12 @@ class PositionManager:
 
     def update_positions(self):
         try:
-            response = self.exchange.fetchPositions()
+            response = self.exchange.fetch_positions([self.symbol])
             positions = response
             self.positions = []  # init self.positions
             for position in positions:
-                if position['symbol'] == self.exchange.market_id(self.symbol):
+                if position['entryPrice'] is not None and \
+                   position['symbol'].split(':')[0].replace("/", "") == self.exchange.market_id(self.symbol).replace("/", ""):
                     self.positions.append(position)
         except Exception as e:
             print(f"An error occurred while fetching positions: {e}")
