@@ -17,21 +17,11 @@ class PositionManager:
         except Exception as e:
             print(f"An error occurred while fetching positions: {e}")
 
-    def get_position_size(self):
-        if self.position is not None:
-            return abs(float(self.position['size']))
-        return 0
-
-    def get_position_side(self):
-        if self.position is not None:
-            side = 'long' if float(self.position['size']) > 0 else 'short'
-            return side
-        return None
-
-    def get_position_pnl(self):
-        if self.position is not None:
-            return float(self.position['unrealised_pnl'])
-        return None
+    def get_position_pnl(self, positions):
+        for position in positions:
+            if position is not None:
+                info = position['info']
+                print(f"{info['side']}: unrealisedPnl {info['unrealisedPnl']}")
     
     def separate_positions_by_side(self):
         long_positions = []
@@ -42,5 +32,8 @@ class PositionManager:
                 long_positions.append(position)
             elif position['info']['side'] == 'Sell':
                 short_positions.append(position)
+
+        self.get_position_pnl(long_positions)
+        self.get_position_pnl(short_positions)
 
         return long_positions, short_positions
