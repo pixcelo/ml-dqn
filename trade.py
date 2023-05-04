@@ -31,6 +31,7 @@ class Trade:
         self.url="https://api.bybit.com"
         # self.url="https://api-testnet.bybit.com" 
         self.mode = self.set_position_mode(0)
+        self.qty = 0.005
 
     def get_ohlcv(self, timeframe):
         ohlcv = self.exchange.fetch_ohlcv("BTC/USDT", timeframe)
@@ -52,7 +53,7 @@ class Trade:
         position_manager = PositionManager(self.exchange, "BTCUSDT")
         long_positions, short_positions = position_manager.separate_positions_by_side()
 
-        amount = 0.001        
+        amount = self.qty
         result = None
 
         trade_action = self.decide_trade_action(long_positions, short_positions, prediction)
@@ -61,10 +62,15 @@ class Trade:
             result = self.place_order("BTCUSDT", "Buy", amount)
         elif trade_action == "SELL_TO_OPEN":
             result = self.place_order("BTCUSDT", "Sell", amount)
+        # After executing the settlement order, hold a new position in the same direction
         elif trade_action == "SELL_TO_CLOSE":
             result = self.place_order("BTCUSDT", "Sell", amount)
+            if result:
+                result = self.place_order("BTCUSDT", "Sell", amount)
         elif trade_action == "BUY_TO_CLOSE":
             result = self.place_order("BTCUSDT", "Buy", amount)
+            if result:
+                result = self.place_order("BTCUSDT", "Buy", amount)
         elif trade_action == "HOLD_LONG" or trade_action == "HOLD_SHORT" or trade_action == "DO_NOTHING":
             pass
 
