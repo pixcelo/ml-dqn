@@ -20,6 +20,13 @@ class Predictor:
             processed_dfs.append(processed_df)
 
         combined_df = pd.concat(processed_dfs, axis=1).dropna()
+        # add feature support and resistance
+        combined_df = support_resistance(combined_df, "1h")
+        combined_df = support_resistance(combined_df, "4h")
+        combined_df = support_resistance(combined_df, "1d")
+        combined_df = price_relation(combined_df, '15m', '1h')
+        combined_df = price_relation(combined_df, '15m', '4h')
+        combined_df = price_relation(combined_df, '15m', '1d')
         return combined_df
     
     def predict(self, market_data):
@@ -40,11 +47,26 @@ class Predictor:
 def create_label(df, prefix, lookahead=1):
     df[f'{prefix}_target'] = (df[f'{prefix}_close'].shift(-lookahead) > df[f'{prefix}_close']).astype(int)
     df = df.dropna()
-    return df       
+    return df
 
 def log_transform_feature(X):
     X[X <= 0] = np.finfo(float).eps
     return np.log(X)
+
+def support_resistance(df, prefix, window=200):
+    high = df[f'{prefix}_high']
+    low = df[f'{prefix}_low']
+    df[f'{prefix}_support'] = low.rolling(window=window, min_periods=1).min()
+    df[f'{prefix}_resistance'] = high.rolling(window=window, min_periods=1).max()
+    return df
+
+def price_relation(df, short_prefix, long_prefix):
+    short_close = df[f'{short_prefix}_close']
+    long_support = df[f'{long_prefix}_support']
+    long_resistance = df[f'{long_prefix}_resistance']
+    df[f'{short_prefix}_close_to_{long_prefix}_support'] = (short_close - long_support) / long_support
+    df[f'{short_prefix}_close_to_{long_prefix}_resistance'] = (short_close - long_resistance) / long_resistance
+    return df
 
 def feature_engineering(df, prefix):
     # open = df[f'{prefix}_open'].values
@@ -78,3 +100,4 @@ def feature_engineering(df, prefix):
     df = df.reset_index(drop=True)
 
     return df
+    

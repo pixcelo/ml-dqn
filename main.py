@@ -16,14 +16,13 @@ def main():
     logger = Logger("main")
     discord_notifier = DiscordNotifier(config)
 
-    logger().info("Main function started")
+    print("Main function started.")
 
     # Main loop
     while True:
         try:
             # Get market data
             market_data = trade.get_market_data()
-            logger().info("get market data")
 
             # Make predictions
             prediction = predictor.predict(market_data)
@@ -39,6 +38,7 @@ def main():
 
         except Exception as e:
             logger().error(f"An exception occurred: {e}")
+            discord_notifier.notify(f"An exception occurred: {e}")
 
 if __name__ == "__main__":
     main()

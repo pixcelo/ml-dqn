@@ -8,6 +8,7 @@ import hashlib
 import json
 from urllib.parse import urlencode
 from position_manager import PositionManager
+from discord_notifier import DiscordNotifier
 from account import Account
 from logger import Logger
 
@@ -26,12 +27,13 @@ class Trade:
         })
 
         self.logger = Logger("trade")
+        self.discord_notifier = DiscordNotifier(config)
         self.account = Account(self.exchange)
         self.recv_window=str(10000)
         self.url="https://api.bybit.com"
         # self.url="https://api-testnet.bybit.com" 
         self.mode = self.set_position_mode(0)
-        self.qty = 0.002
+        self.qty = 0.005
 
     def get_ohlcv(self, timeframe):
         ohlcv = self.exchange.fetch_ohlcv("BTC/USDT", timeframe)
@@ -42,9 +44,10 @@ class Trade:
         return df
 
     def get_market_data(self):
-        timeframes = ["1m", "5m", "15m", "1h", "4h"]
+        timeframes = ["1m", "5m", "15m", "1h", "4h", "1d"]
         # Get OHLCV data for each timeframe
         ohlcv_data = [self.get_ohlcv(timeframe) for timeframe in timeframes]
+        self.logger().info("get market data.")
         return ohlcv_data
 
     def execute_trade(self, prediction):
@@ -162,6 +165,7 @@ class Trade:
                     summary = f"{info} failed. Elapsed Time: {response.elapsed}, Result: No response data"
 
             self.logger().info(summary)
+            self.discord_notifier.notify(summary)
             print(summary)
             return True
 
