@@ -32,7 +32,7 @@ def main():
             trade_result = trade.execute_trade(prediction)
             discord_notifier.notify(trade_result)
             
-            wait_time_minutes = 15
+            wait_time_minutes = 10
             print(f"Waiting for {wait_time_minutes} minutes before continuing...")
             time.sleep(wait_time_minutes * 60)
 

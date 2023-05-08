@@ -44,7 +44,7 @@ class Trade:
         return df
 
     def get_market_data(self):
-        timeframes = ["1m", "5m", "15m", "1h", "4h", "1d"]
+        timeframes = ["1m", "5m", "15m", "30m", "1h", "4h", "1d"]
         # Get OHLCV data for each timeframe
         ohlcv_data = [self.get_ohlcv(timeframe) for timeframe in timeframes]
         self.logger().info("get market data.")
