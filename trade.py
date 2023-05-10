@@ -90,29 +90,23 @@ class Trade:
         return message
     
     def decide_trade_action(self, long_positions, short_positions, prediction):
-        if long_positions:
-            if prediction == 1:
-                return "HOLD_LONG"
-            else:
-                return "SELL_TO_CLOSE"
-        else:
-            if prediction == 1:
-                return "BUY_TO_OPEN"
-            else:
-                pass
-
-        if short_positions:
-            if prediction != 1:
-                return "HOLD_SHORT"
-            else:
-                return "BUY_TO_CLOSE"
-        else:
-            if prediction != 1:
-                return "SELL_TO_OPEN"
-            else:
-                pass
-
+        if long_positions and prediction == 1:
+            return "HOLD_LONG"
+        if long_positions and prediction == 2:
+            return "SELL_TO_CLOSE"
+        
+        if short_positions and prediction == 1:
+            return "BUY_TO_CLOSE"
+        if short_positions and prediction == 2:
+            return "HOLD_SHORT"
+        
+        if prediction == 1:
+            return "BUY_TO_OPEN"
+        if prediction == 2:
+            return "SELL_TO_OPEN"
+        
         return "DO_NOTHING"
+
 
     def place_order(self, symbol, side, amount):
         endpoint="/v5/order/create"

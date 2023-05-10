@@ -41,18 +41,33 @@ class Predictor:
         preprocessed_data = self.preprocess_market_data(market_data)
 
         # Make prediction based on preprocessed market_data
-        preprocessed_data = preprocessed_data.drop("1m_target", axis=1) 
-        prediction_proba = self.model.predict(preprocessed_data, raw_score=False, pred_leaf=False, pred_contrib=False)
+        preprocessed_data = preprocessed_data.drop("1m_target", axis=1)
+        prediction_proba = self.model.predict_proba(preprocessed_data)
 
-        # Apply threshold to the predicted probabilities
-        action = np.where(prediction_proba > 0.5, 1, 0)
+        # Get the class with the highest probability
+        action = np.argmax(prediction_proba, axis=1)
 
         return action[0]
 
 
 # feature engineering
 def create_label(df, prefix, lookahead=1):
-    df[f'{prefix}_target'] = (df[f'{prefix}_close'].shift(-lookahead) > df[f'{prefix}_close']).astype(int)
+    price_changes = df[f'{prefix}_close'].shift(-lookahead) - df[f'{prefix}_close']
+    mean_price_change = np.mean(price_changes)
+    std_price_change = np.std(price_changes)
+    # Set the threshold to consider as "unchanged" (e.g., mean ±1 standard deviation)
+    threshold_lower = mean_price_change - std_price_change
+    threshold_upper = mean_price_change + std_price_change
+
+    def classify_price_change(price_change):
+        if price_change > threshold_upper:
+            return 1 # up
+        elif price_change < threshold_lower:
+            return 2 # down
+        else:
+            return 0 # unchanged
+
+    df[f'{prefix}_target'] = price_changes.apply(classify_price_change)
     df = df.dropna()
     return df
 
