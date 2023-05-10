@@ -42,13 +42,12 @@ class Predictor:
 
         # Make prediction based on preprocessed market_data
         preprocessed_data = preprocessed_data.drop("1m_target", axis=1)
-        prediction_proba = self.model.predict_proba(preprocessed_data)
+        prediction_proba = self.model.predict(preprocessed_data)
 
-        # Get the class with the highest probability
-        action = np.argmax(prediction_proba, axis=1)
+        # Get the predicted class
+        predicted_class = np.argmax(prediction_proba, axis=1)
 
-        return action[0]
-
+        return predicted_class[0]
 
 # feature engineering
 def create_label(df, prefix, lookahead=1):
