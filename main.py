@@ -29,8 +29,8 @@ def main():
             print(f"The predicted value is {prediction}.")
 
             # Execute trade
-            trade_result = trade.execute_trade(prediction)
-            discord_notifier.notify(trade_result)
+            # trade_result = trade.execute_trade(prediction)
+            # discord_notifier.notify(trade_result)
             
             wait_time_minutes = 10
             print(f"Waiting for {wait_time_minutes} minutes before continuing...")

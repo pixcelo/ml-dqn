@@ -16,7 +16,7 @@ class Predictor:
         for df in dfs:
             prefix = df.columns[0].split('_')[0]
             processed_df = feature_engineering(df, prefix)
-            processed_df = create_label(processed_df, prefix, 15)
+            processed_df = create_label(processed_df, prefix, 10)
             processed_dfs.append(processed_df)
 
         combined_df = pd.concat(processed_dfs, axis=1).dropna()
@@ -50,8 +50,8 @@ class Predictor:
         return predicted_class[0]
 
 # feature engineering
-def create_label(df, prefix, lookahead=1):
-    price_changes = df[f'{prefix}_close'].shift(-lookahead) - df[f'{prefix}_close']
+def create_label(df, prefix, lookbehind=1):
+    price_changes = df[f'{prefix}_close'] - df[f'{prefix}_close'].shift(lookbehind)
     mean_price_change = np.mean(price_changes)
     std_price_change = np.std(price_changes)
     # Set the threshold to consider as "unchanged" (e.g., mean ±1 standard deviation)
