@@ -16,7 +16,7 @@ class Predictor:
         for df in dfs:
             prefix = df.columns[0].split('_')[0]
             processed_df = feature_engineering(df, prefix)
-            processed_df = create_label(processed_df, prefix, 10)
+            processed_df = create_label(processed_df, prefix, 1)
             processed_dfs.append(processed_df)
 
         combined_df = pd.concat(processed_dfs, axis=1).dropna()
@@ -28,20 +28,24 @@ class Predictor:
         combined_df = support_resistance(combined_df, "1h")
         combined_df = support_resistance(combined_df, "4h")
         combined_df = support_resistance(combined_df, "1d")
-        combined_df = price_relation(combined_df, '1m', '5m')
-        combined_df = price_relation(combined_df, '1m', '15m')
-        combined_df = price_relation(combined_df, '1m', '30m')
-        combined_df = price_relation(combined_df, '1m', '1h')
-        combined_df = price_relation(combined_df, '1m', '4h')
-        combined_df = price_relation(combined_df, '1m', '1d')
+        # combined_df = price_relation(combined_df, '1m', '5m')
+        # combined_df = price_relation(combined_df, '1m', '15m')
+        combined_df = price_relation(combined_df, '15m', '30m')
+        combined_df = price_relation(combined_df, '15m', '1h')
+        combined_df = price_relation(combined_df, '15m', '4h')
+        combined_df = price_relation(combined_df, '15m', '1d')
         return combined_df
     
     def predict(self, market_data):
         # Preprocess market_data
         preprocessed_data = self.preprocess_market_data(market_data)
 
+        # Print the latest close value from the market_data DataFrame
+        latest_close_value = preprocessed_data.loc[0, '1m_close']
+        print(f"Latest close value: {latest_close_value}")
+
         # Make prediction based on preprocessed market_data
-        preprocessed_data = preprocessed_data.drop("1m_target", axis=1)
+        preprocessed_data = preprocessed_data.drop("15m_target", axis=1)
         prediction_proba = self.model.predict(preprocessed_data)
 
         # Get the predicted class
@@ -50,23 +54,29 @@ class Predictor:
         return predicted_class[0]
 
 # feature engineering
-def create_label(df, prefix, lookbehind=1):
+def create_label(df, prefix, lookbehind=1, lookback_window=200):
     price_changes = df[f'{prefix}_close'] - df[f'{prefix}_close'].shift(lookbehind)
-    mean_price_change = np.mean(price_changes)
-    std_price_change = np.std(price_changes)
+    
+    # Calculate mean and std for the specified lookback_window
+    mean_price_change = price_changes.rolling(window=lookback_window).mean()
+    std_price_change = price_changes.rolling(window=lookback_window).std()
+
     # Set the threshold to consider as "unchanged" (e.g., mean ±1 standard deviation)
     threshold_lower = mean_price_change - std_price_change
     threshold_upper = mean_price_change + std_price_change
 
-    def classify_price_change(price_change):
-        if price_change > threshold_upper:
-            return 1 # up
-        elif price_change < threshold_lower:
-            return 2 # down
+    def classify_price_change(price_change, lower, upper):
+        if price_change > upper:
+            return 1  # up
+        elif price_change < lower:
+            return 2  # down
         else:
-            return 0 # unchanged
+            return 0  # unchanged
 
-    df[f'{prefix}_target'] = price_changes.apply(classify_price_change)
+    # Apply classify_price_change to each row with the corresponding thresholds
+    df[f'{prefix}_target'] = np.vectorize(classify_price_change)(
+        price_changes, threshold_lower, threshold_upper
+    )
     df = df.dropna()
     return df
 
@@ -121,12 +131,20 @@ def feature_engineering(df, prefix):
     df[f'{prefix}_double_top'], df[f'{prefix}_double_bottom'] = detect_double_top_bottom(df, prefix)
     df = detect_triangle_pattern(df, prefix)
     df = parallel_channel(df, prefix)
+    df = add_additional_features(df, prefix)
 
     df = df.dropna()
     df = df.reset_index(drop=True)
 
     return df
-    
+
+def add_additional_features(df, prefix):
+    close = df[f'{prefix}_close'].values
+    df[f'{prefix}_PPO'] = talib.PPO(close, fastperiod=12, slowperiod=26, matype=0)
+    df[f'{prefix}_perc_from_high'] = (df[f'{prefix}_high'].rolling(window=14).max() - close) / close
+    df[f'{prefix}_perc_from_low'] = (close - df[f'{prefix}_low'].rolling(window=14).min()) / close    
+    df[f'{prefix}_Range'] = df[f'{prefix}_high'] - df[f'{prefix}_low']
+    return df
 
 def calculate_high_close_comparison(df, prefix):
     high = df[f'{prefix}_high'].values
