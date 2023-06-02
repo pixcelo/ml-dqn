@@ -17,6 +17,7 @@ class Trade:
         self.api_key = config.get("exchange", "api_key")
         self.secret_key = config.get("exchange", "secret_key")
         self.exchange_name = config.get("exchange", "exchange_name")
+        self.first_run = True
 
         # Initialize exchange
         self.exchange = getattr(ccxt, self.exchange_name)({
@@ -36,15 +37,15 @@ class Trade:
         self.qty = 0.005
 
     def get_ohlcv(self, timeframe):
-        ohlcv = self.exchange.fetch_ohlcv("BTC/USDT", timeframe)
+        ohlcv = self.exchange.fetch_ohlcv("BTC/USDT", timeframe, limit=500)
         df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
-        df[f"{timeframe}_timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
-        df.set_index(f"{timeframe}_timestamp", inplace=True)
+        df.set_index(pd.to_datetime(df["timestamp"], unit="ms"), inplace=True)
+        df.drop(columns=["timestamp"], inplace=True)
         df.columns = [f"{timeframe}_{col}" for col in df.columns]
         return df
 
     def get_market_data(self):
-        timeframes = ["1m", "5m", "15m", "30m", "1h", "4h", "1d"]
+        timeframes = ["1m", "5m", "15m", "30m"]
         # Get OHLCV data for each timeframe
         ohlcv_data = [self.get_ohlcv(timeframe) for timeframe in timeframes]
         self.logger().info("get market data.")

@@ -3,6 +3,8 @@ from trade import Trade
 from predict import Predictor
 from logger import Logger
 from discord_notifier import DiscordNotifier
+import schedule
+from datetime import datetime
 import time
 
 def main():
@@ -25,14 +27,17 @@ def main():
             market_data = trade.get_market_data()
 
             # Make predictions
-            prediction = predictor.predict(market_data)
+            preprocessed_df = predictor.preprocess_market_data(market_data)
+            data_row = preprocessed_df.iloc[-1]
+            print(data_row)
+            prediction = predictor.predict(data_row)
             print(f"The predicted value is {prediction}.")
 
             # Execute trade
             # trade_result = trade.execute_trade(prediction)
             # discord_notifier.notify(trade_result)
             
-            wait_time_minutes = 15
+            wait_time_minutes = 1
             print(f"Waiting for {wait_time_minutes} minutes before continuing...")
             time.sleep(wait_time_minutes * 60)
 
