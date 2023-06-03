@@ -29,13 +29,20 @@ def main():
             # Make predictions
             preprocessed_df = predictor.preprocess_market_data(market_data)
             data_row = preprocessed_df.iloc[-1]
-            print(data_row)
+            prev_row = preprocessed_df.iloc[-2]
+
             prediction = predictor.predict(data_row)
             print(f"The predicted value is {prediction}.")
 
+            condition = {
+                'prediction': prediction,
+                'data_row': data_row,
+                'prev_row': prev_row,
+            }
+
             # Execute trade
-            # trade_result = trade.execute_trade(prediction)
-            # discord_notifier.notify(trade_result)
+            trade_result = trade.execute_trade(condition)
+            discord_notifier.notify(trade_result)
             
             wait_time_minutes = 1
             print(f"Waiting for {wait_time_minutes} minutes before continuing...")

@@ -51,7 +51,7 @@ class Trade:
         self.logger().info("get market data.")
         return ohlcv_data
 
-    def execute_trade(self, prediction):
+    def execute_trade(self, condition):
         self.check_balance()
         # Execute trade based on prediction here
         position_manager = PositionManager(self.exchange, "BTCUSDT")
@@ -60,7 +60,7 @@ class Trade:
         amount = self.qty
         result = None
 
-        trade_action = self.decide_trade_action(long_positions, short_positions, prediction)
+        trade_action = self.decide_trade_action(long_positions, short_positions, condition)
 
         if trade_action == "BUY_TO_OPEN":
             result = self.place_order("BTCUSDT", "Buy", amount)
@@ -68,13 +68,9 @@ class Trade:
             result = self.place_order("BTCUSDT", "Sell", amount)
         # After executing the settlement order, hold a new position in the same direction
         elif trade_action == "SELL_TO_CLOSE":
-            result = self.place_order("BTCUSDT", "Sell", amount)
-            if result:
-                result = self.place_order("BTCUSDT", "Sell", amount)
-        elif trade_action == "BUY_TO_CLOSE":
             result = self.place_order("BTCUSDT", "Buy", amount)
-            if result:
-                result = self.place_order("BTCUSDT", "Buy", amount)
+        elif trade_action == "BUY_TO_CLOSE":
+            result = self.place_order("BTCUSDT", "Sell", amount)
         elif trade_action == "HOLD_LONG" or trade_action == "HOLD_SHORT" or trade_action == "DO_NOTHING":
             pass
 
@@ -90,24 +86,39 @@ class Trade:
         print(message)
         return message
     
-    def decide_trade_action(self, long_positions, short_positions, prediction):
-        if long_positions and prediction == 1:
-            return "HOLD_LONG"
-        if long_positions and prediction == 2:
-            return "SELL_TO_CLOSE"
-        
-        if short_positions and prediction == 1:
-            return "BUY_TO_CLOSE"
-        if short_positions and prediction == 2:
-            return "HOLD_SHORT"
-        
-        if prediction == 1:
-            return "BUY_TO_OPEN"
-        if prediction == 2:
-            return "SELL_TO_OPEN"
-        
-        return "DO_NOTHING"
+    def decide_trade_action(self, long_positions, short_positions, condition):
+        data_row = condition['data_row']
+        prev_row = condition['prev_row']
+        upper = data_row['1m_BB_UPPER']
+        lower = data_row['1m_BB_LOWER']
+        y_pred = condition['prediction']
 
+        if len(long_positions) > 0 or len(short_positions) > 0:
+            if len(long_positions) > 0:
+                if data_row['1m_close'] > data_row['1m_BB_MIDDLE'] and \
+                    prev_row['1m_close'] < prev_row['1m_BB_MIDDLE']:
+                    return "BUY_TO_CLOSE"
+                else:
+                    return "HOLD_LONG"
+            elif len(short_positions) > 0:
+                if data_row['1m_close'] < data_row['1m_BB_MIDDLE'] and \
+                    prev_row['1m_close'] > prev_row['1m_BB_MIDDLE']:
+                    return "SELL_TO_CLOSE"
+                else:
+                    return "HOLD_SHORT"
+            else:
+                return "DO_NOTHING"
+        
+        # If the Bollinger Bands reach 2 sigma
+        elif data_row['1m_high'] >= upper:
+            if y_pred == 0:
+                return "SELL_TO_OPEN"
+        
+        elif data_row['1m_low'] <= lower:
+            if y_pred == 1:
+                return "BUY_TO_OPEN"
+        else:
+            return "DO_NOTHING"
 
     def place_order(self, symbol, side, amount):
         endpoint="/v5/order/create"
