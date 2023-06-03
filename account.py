@@ -5,6 +5,7 @@ class Account:
     def get_balance(self):
         balance = self.exchange.fetch_balance()
         
+        print('='*50)
         usdt_balance = balance['total']['USDT']
         print(f'USDT balance: {usdt_balance}')
         
@@ -25,3 +26,5 @@ class Account:
             print(f'Margin utilization rate: {margin_utilization_rate}%')
         else:
             print("No margin balance available.")
+
+        print('='*50)

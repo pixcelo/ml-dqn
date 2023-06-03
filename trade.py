@@ -34,7 +34,7 @@ class Trade:
         self.url="https://api.bybit.com"
         # self.url="https://api-testnet.bybit.com" 
         self.mode = self.set_position_mode(0)
-        self.qty = 0.005
+        self.qty = 0.008
 
     def get_ohlcv(self, timeframe):
         ohlcv = self.exchange.fetch_ohlcv("BTC/USDT", timeframe, limit=500)
