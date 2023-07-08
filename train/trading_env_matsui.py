@@ -45,14 +45,14 @@ class TradingEnvMatsui(gym.Env):
         if action == 1:  # Buy
             if self.cash >= current_price:
                 self.holdings += 1
-                self.cash -= current_price
+                self.cash -= current_price * (1 + self.transaction_cost)
                 self.purchase_price = current_price
             else:
                 reward -= penalty
         elif action == 2:  # Sell
             if self.holdings > 0:
                 self.holdings -= 1
-                self.cash += current_price
+                self.cash += current_price * (1 - self.transaction_cost)
             else:
                 reward -= penalty
 
