@@ -16,8 +16,6 @@ class Agent:
         self.v_max = 10
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.support = torch.linspace(self.v_min, self.v_max, self.atom_size).to(self.device)
-        self.rewards_history = []
-        self.actions_history = []
 
         # Initialize Q-Network and target network
         self.q_network = QNetwork(state_size, action_size, atom_size, self.support, self.v_min, self.v_max).to(self.device)
@@ -51,9 +49,9 @@ class Agent:
         with torch.no_grad():
             act_values = (self.q_network(state) * self.support).sum(dim=2)
 
-        return np.argmax(act_values.cpu().data.numpy())
+        action = np.argmax(act_values.cpu().data.numpy())
+        return action
 
-    
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
 
@@ -105,16 +103,13 @@ class Agent:
         state = np.reshape(state, [1, self.state_size])
         for time in range(total_episodes):
             action = self.get_action(state, current_episode)
-            self.actions_history.append(action)
             next_state, reward, done, _ = self.env.step(action)
             next_state = np.reshape(next_state, [1, self.state_size])
             self.remember(state, action, reward, next_state, done)
             state = next_state
             if done:
-                print("Episode: {}/{}, Score: {}" 
-                        .format(current_episode, total_episodes, self.env.episode_reward))
-                self.rewards_history.append(self.env.episode_reward)
-                self.env.episode_rewards.append(self.env.episode_reward) 
+                # print("Episode: {}/{}, Score: {}" 
+                #         .format(current_episode, total_episodes, self.env.episode_reward))
                 break
             if len(self.memory) > self.batch_size:
                 self.replay()

@@ -19,6 +19,8 @@ class TradingEnvMatsui(gym.Env):
         self.holdings = 0  # Initial asset holdings
         self.history = []  # Initialize history
         self.episode_rewards = []
+        self.actions_history = []
+        self.total_asset_history = []
         
         self.gamma = gamma  # Discount factor
         self.f = f  # Investment ratio
@@ -69,17 +71,22 @@ class TradingEnvMatsui(gym.Env):
         self.f += self.eta * reward / (1 + reward * self.f)
         self.episode_reward += reward
 
+        total_asset = self.cash + self.holdings * current_price
+
         # Record the history
         self.history.append({
             "step": self.current_step,
             "cash": self.cash,
             "action": action,
-            "total_asset": self.cash + self.holdings * current_price,
+            "total_asset": total_asset,
             "reward": reward,
             "done": done
         })
 
         self.episode_rewards.append(reward)
+        self.actions_history.append(action)
+        self.total_asset_history.append(total_asset)
+
         return self._get_observation(), reward, done, {}
     
     def reset(self):
@@ -88,7 +95,6 @@ class TradingEnvMatsui(gym.Env):
         self.current_step = 0
         self.purchase_price = 0 
         self.f = 0.5  # Reset the investment ratio
-        self.episode_rewards = []
         self.episode_reward = 0
         self.history = []
         return self._get_observation()
@@ -107,17 +113,17 @@ class TradingEnvMatsui(gym.Env):
         df_history = pd.DataFrame(self.history)
         df_history.set_index('step', inplace=True)
 
-        fig, ax = plt.subplots(2, 2, figsize=[16, 10])
+        fig, ax = plt.subplots(2, 2, figsize=[8, 6])
 
         # Total Asset over time
-        ax[0][0].plot(df_history['total_asset'], label='Total Asset', linestyle='-')
+        ax[0][0].plot(self.total_asset_history, label='Total Asset', linestyle='-')
         ax[0][0].yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:.0f}"))
         ax[0][0].set_title('Total Asset over Time')
         ax[0][0].legend(loc='upper left')
 
         # Action over time
-        ax[0][1].plot(df_history['action'], label='Action over time', linestyle='-')
-        ax[0][1].set_title('Action over Time')
+        ax[0][1].plot(self.actions_history, label='Actions History', linestyle='-')
+        ax[0][1].set_title('Action over time')
         ax[0][1].legend(loc='upper left')
         ax[0][1].set_yticks(range(self.action_space.n))
 
@@ -127,12 +133,10 @@ class TradingEnvMatsui(gym.Env):
         ax[1][0].legend(loc='upper left')
         ax[1][0].autoscale_view(scalex=True, scaley=True)
 
-
-        # Learning curve plot
-        ax[1][1].plot([np.mean(self.episode_rewards[i-100:i]) if i >= 100 else np.mean(self.episode_rewards[:i]) for i in range(1, len(self.episode_rewards)+1)], label='Learning Curve (Reward per 100 episodes)')
-        ax[1][1].set_title('Learning Curve')
+        # Reward over time
+        ax[1][1].plot(self.episode_rewards, label='Reward', linestyle='-')
+        ax[1][1].set_title('Reward over Time')
         ax[1][1].legend(loc='upper left')
-        ax[1][1].autoscale_view(scalex=True, scaley=True)
 
         plt.tight_layout()
         plt.show()

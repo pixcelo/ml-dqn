@@ -4,7 +4,6 @@ import talib
 class FeatureEngineer:
     def __init__(self, df):
         self.df = df
-        print(df)
 
     def log_transform_feature(self, X):
         X[X <= 0] = np.finfo(float).eps
@@ -53,8 +52,6 @@ class FeatureEngineer:
 
         df = df.fillna(method='ffill')
         df = df.fillna(method='bfill')
-
-        print(df)
 
         return df
 
