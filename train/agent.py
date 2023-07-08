@@ -103,24 +103,23 @@ class Agent:
     def learn(self, current_episode, total_episodes):
         state = self.env.reset()
         state = np.reshape(state, [1, self.state_size])
-        total_reward = 0
-        episode_length = 1000
-        for time in range(episode_length):
+        for time in range(total_episodes):
             action = self.get_action(state, current_episode)
             self.actions_history.append(action)
             next_state, reward, done, _ = self.env.step(action)
             next_state = np.reshape(next_state, [1, self.state_size])
             self.remember(state, action, reward, next_state, done)
             state = next_state
-            total_reward += reward
-            self.rewards_history.append(total_reward)
             if done:
                 print("Episode: {}/{}, Score: {}" 
-                        .format(current_episode, total_episodes, total_reward))
+                        .format(current_episode, total_episodes, self.env.episode_reward))
+                self.rewards_history.append(self.env.episode_reward)
+                self.env.episode_rewards.append(self.env.episode_reward) 
                 break
             if len(self.memory) > self.batch_size:
                 self.replay()
-        return total_reward
+            
+        return self.env.episode_reward
     
     def save_model(self):
         # Get current date and time
