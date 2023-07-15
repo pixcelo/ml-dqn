@@ -71,7 +71,7 @@ class TradingEnvMatsui(gym.Env):
 
         # If no stocks are held and no action is taken, reward is zero due to lost opportunity.
         if self.holdings == 0 and action == 0:
-            reward = 0
+            reward = -0.1
 
         # Update f using online gradient method
         self.f += self.eta * reward / (1 + reward * self.f)
