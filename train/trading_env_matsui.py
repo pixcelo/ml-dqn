@@ -15,9 +15,11 @@ class TradingEnvMatsui(gym.Env):
         self.action_space = spaces.Discrete(3)  # 0: Do nothing, 1: Buy, 2: Sell
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(self.df.shape[1] + 4,))
 
+        self.cash_initial = 1000000
         self.cash = 1000000  # Initial cash position
         self.holdings = 0  # Initial asset holdings
         self.history = []  # Initialize history
+        self.episode_reward = 0
         self.episode_rewards = []
         self.actions_history = []
         self.total_asset_history = []
@@ -67,6 +69,10 @@ class TradingEnvMatsui(gym.Env):
         else:
             reward = 0
 
+        # If no stocks are held and no action is taken, reward is zero due to lost opportunity.
+        if self.holdings == 0 and action == 0:
+            reward = 0
+
         # Update f using online gradient method
         self.f += self.eta * reward / (1 + reward * self.f)
         self.episode_reward += reward
@@ -99,32 +105,11 @@ class TradingEnvMatsui(gym.Env):
         self.history = []
         return self._get_observation()
     
-    # Scaling so that the observations at each step are on the same scale
     def _get_observation(self):
         total_asset = self.cash + self.holdings * self.purchase_price
-        if total_asset > 0:
-            cash_ratio = self.cash / total_asset
-            holdings_ratio = self.holdings * self.purchase_price / total_asset
-            scaled_cash = self.cash / self.cash_initial  # Assuming initial cash is known and constant
-            scaled_holdings = self.holdings * self.purchase_price / self.cash_initial
-        else:
-            cash_ratio = 0
-            holdings_ratio = 0
-            scaled_cash = 0
-            scaled_holdings = 0
-
-        scaled_df_row = (self.df.iloc[self.current_step] - self.df.mean()) / self.df.std()  # Assuming df is not changing throughout the episode
-        return np.append(scaled_df_row, [scaled_holdings, scaled_cash, cash_ratio, holdings_ratio])
-
-    # def _get_observation(self):
-    #     total_asset = self.cash + self.holdings * self.purchase_price
-    #     if total_asset > 0:
-    #         cash_ratio = self.cash / total_asset
-    #         holdings_ratio = self.holdings * self.purchase_price / total_asset
-    #     else:
-    #         cash_ratio = 0
-    #         holdings_ratio = 0
-    #     return np.append(self.df.iloc[self.current_step], [self.holdings, self.cash, cash_ratio, holdings_ratio])
+        cash_ratio = self.cash / total_asset
+        holdings_ratio = self.holdings * self.purchase_price / total_asset
+        return np.append(self.df.iloc[self.current_step], [self.holdings, self.cash, cash_ratio, holdings_ratio])
            
     def plot_history(self):
         df_history = pd.DataFrame(self.history)
