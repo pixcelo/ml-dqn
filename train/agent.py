@@ -59,10 +59,10 @@ class Agent:
         # Sample a minibatch from memory
         minibatch = random.sample(self.memory, self.batch_size)
         states, actions, rewards, next_states, dones = zip(*minibatch)
-        states = torch.tensor(states).float().to(self.device)
+        states = torch.from_numpy(np.array(states)).float().to(self.device)
         actions = torch.tensor(actions).long().unsqueeze(1).to(self.device)
         rewards = torch.tensor(rewards).float().unsqueeze(1).to(self.device)
-        next_states = torch.tensor(next_states).float().to(self.device)
+        next_states = torch.from_numpy(np.array(next_states)).float().to(self.device)
         dones = torch.tensor(dones).float().unsqueeze(1).to(self.device)
 
         # Compute Q(s_t, a)
