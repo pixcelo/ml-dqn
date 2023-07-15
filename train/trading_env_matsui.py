@@ -1,8 +1,5 @@
 import gym
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
-import plotly.graph_objects as go
 import pandas as pd
 from gym import spaces
 
@@ -71,7 +68,7 @@ class TradingEnvMatsui(gym.Env):
 
         # If no stocks are held and no action is taken, reward is zero due to lost opportunity.
         if self.holdings == 0 and action == 0:
-            reward = -0.1
+            reward = -0.5
 
         # Update f using online gradient method
         self.f += self.eta * reward / (1 + reward * self.f)
