@@ -132,6 +132,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+venv38/
 
 # Spyder project settings
 .spyderproject
@@ -177,9 +178,14 @@ pyrightconfig.json
 # config
 config.ini
 
+# models
+model/
+
 # log files
 log/
 
+checkpoints/
+csv/
 .DS_Store
 
 # End of https://www.toptal.com/developers/gitignore/api/python
